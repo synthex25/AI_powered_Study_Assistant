@@ -1,0 +1,14 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="notewise-gradient" x1="0" y1="0" x2="32" y2="32"
+      gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="50%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#notewise-gradient)" />
+  <path
+    d="M16 7C14.3431 7 13 8.34315 13 10C13 11.6569 14.3431 13 16 13C17.6569 13 19 11.6569 19 10C19 8.34315 17.6569 7 16 7ZM10 13C8.34315 13 7 14.3431 7 16C7 17.6569 8.34315 19 10 19C11.6569 19 13 17.6569 13 16C13 14.3431 11.6569 13 10 13ZM22 13C20.3431 13 19 14.3431 19 16C19 17.6569 20.3431 19 22 19C23.6569 19 25 17.6569 25 16C25 14.3431 23.6569 13 22 13ZM16 19C14.3431 19 13 20.3431 13 22C13 23.6569 14.3431 25 16 25C17.6569 25 19 23.6569 19 22C19 20.3431 17.6569 19 16 19ZM14.5 12L11.5 14.5M17.5 12L20.5 14.5M14.5 20L11.5 17.5M17.5 20L20.5 17.5"
+    stroke="white" stroke-width="1.5" stroke-linecap="round" />
+</svg>

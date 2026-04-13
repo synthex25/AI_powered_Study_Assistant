@@ -14,6 +14,7 @@ import logger from './utils/logger';
 // Initialize Express app
 const app = express();
 
+
 // CORS configuration
 const corsOptions = {
   origin: config.corsOrigins,
@@ -62,6 +63,9 @@ const startServer = async (): Promise<void> => {
   }
 };
 
-startServer();
+// Start server only when run directly (not when imported by tests)
+if (require.main === module) {
+  startServer();
+}
 
 export default app;

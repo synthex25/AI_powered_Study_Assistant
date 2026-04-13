@@ -1,0 +1,153 @@
+1. Hybrid RAG (Dense + Sparse Retrieval)
+
+Instead of relying only on embeddings:
+
+Dense retrieval → semantic similarity (vector DB like FAISS)
+Sparse retrieval → keyword-based (BM25, TF-IDF)
+
+👉 Combining both improves accuracy:
+
+Dense → understands meaning
+Sparse → catches exact keywords
+
+Use case: Legal docs, research papers
+
+2. Multi-Hop RAG
+
+Basic RAG retrieves one chunk → answer
+But real-world queries need multiple reasoning steps
+
+Example:
+
+Q: “What is the impact of AI on jobs in healthcare?”
+Step 1 → retrieve AI in healthcare
+Step 2 → retrieve job impact
+
+👉 Model chains multiple retrievals before answering
+
+3. Reranking (Important for Accuracy)
+
+Initial retrieval may give irrelevant chunks.
+
+👉 Add a reranker model:
+
+Takes top-k results
+Reorders based on relevance
+
+Flow:
+
+Query → Retrieve 10 docs → Rerank → Select top 3 → LLM
+4. Context Window Optimization
+
+LLMs have token limits → can’t pass everything
+
+Techniques:
+
+Chunking (fixed / semantic)
+Sliding window
+Summarization before passing
+
+👉 Goal: maximize useful context, minimize noise
+
+5. Query Transformation
+
+Instead of sending raw query:
+
+Rewrite query
+Expand query
+Generate multiple queries
+
+Example:
+
+User: "AI in medicine"
+→ Expanded:
+   - AI applications in healthcare
+   - Machine learning in diagnosis
+
+👉 Improves retrieval quality
+
+6. Conversational RAG
+
+Handles multi-turn conversations
+
+Problem:
+
+Follow-up queries lack context
+
+Solution:
+
+Maintain chat history
+Reformulate query using history
+
+Example:
+
+Q1: What is RAG?
+Q2: What are its advantages?
+
+→ Convert Q2 into:
+“Advantages of Retrieval-Augmented Generation”
+
+7. RAG Evaluation Metrics
+
+How to know your RAG works well?
+
+Precision@k → relevant docs retrieved?
+Recall@k → did we miss important info?
+Answer Faithfulness → hallucination check
+Context Relevance
+8. Hallucination Reduction in RAG
+
+Even with RAG, hallucinations can happen
+
+Solutions:
+
+Strict grounding (answer only from context)
+Add citations
+Use smaller temperature
+Use verification step
+9. Advanced Architectures
+🔹 Agentic RAG
+Uses agents to decide:
+when to retrieve
+what to retrieve
+how many times
+🔹 Graph RAG
+Uses knowledge graphs
+Better for relationships & structured data
+🔹 Modular RAG
+
+Separate components:
+
+Retriever
+Reranker
+Generator
+
+👉 Easy to improve each part independently
+
+10. Real-World RAG Pipeline
+User Query
+   ↓
+Query Processing
+   ↓
+Embedding
+   ↓
+Vector DB Retrieval
+   ↓
+Reranking
+   ↓
+Context Selection
+   ↓
+LLM Generation
+   ↓
+Final Answer + Citations
+🚀 Challenges in RAG
+Poor chunking → bad results
+Irrelevant retrieval
+Latency (slow responses)
+Cost (API + vector DB)
+Scaling large datasets
+🌟 Future of RAG
+Real-time RAG (live data retrieval)
+Multimodal RAG (text + image + video)
+Self-improving RAG systems
+Personalized RAG (user-based context)

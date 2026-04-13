@@ -1,0 +1,3 @@
+Machine Learning (ML) is a branch of Artificial Intelligence that enables systems to learn from data and improve performance without being explicitly programmed.
+
+Instead of writing rules manually, ML models learn patterns from historical data.

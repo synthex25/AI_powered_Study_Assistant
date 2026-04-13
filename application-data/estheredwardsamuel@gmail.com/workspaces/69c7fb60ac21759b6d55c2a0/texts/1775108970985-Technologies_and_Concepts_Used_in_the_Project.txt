@@ -1,0 +1,23 @@
+The AI-Powered Study Assistant is developed using a structured Retrieval-Augmented Generation (RAG) architecture. The system integrates modern web technologies, backend services, vector databases, and Large Language Models to provide intelligent and context-aware responses based on user-uploaded study materials.
+
+The frontend of the application is built using React.js, which provides an interactive and responsive user interface for uploading documents, asking questions, and viewing generated answers. The backend is developed using Node.js, which manages user authentication, request handling, and communication between frontend and AI services. MongoDB is used for storing user data and application-related information.
+
+The AI service is implemented using FastAPI (Python), which handles document processing, embedding generation, retrieval operations, and communication with the Large Language Model. The system follows a structured RAG pipeline where uploaded documents are processed and converted into vector embeddings.
+
+For embedding storage and similarity search, the project uses ChromaDB as the vector database. The embeddings are generated using a pre-trained embedding model and stored in ChromaDB. During query time, the system converts the user question into an embedding and performs dense vector similarity search using Approximate Nearest Neighbor (ANN) techniques to retrieve the most relevant document chunks.
+
+The project uses a token-based text splitter to divide large documents into smaller manageable chunks before embedding. This ensures better semantic retrieval and improved LLM performance.
+
+A structured prompt template is used to combine the retrieved context and user query before sending it to the LLM. This ensures that the generated answer is based strictly on the retrieved study materials, reducing hallucination and improving accuracy.
+
+The system follows a fixed and deterministic pipeline:
+
+User Query → Embedding Generation → Vector Similarity Search (ChromaDB) → Prompt Construction → LLM Generation → Response
+
+The project uses standard similarity-based Top-K retrieval. Advanced retrieval techniques such as MMR (Maximal Marginal Relevance), Multi-Query Retrieval, HYDE, and Contextual Compression are not implemented in the current version but can be added as future improvements.
+
+The system does not use an agentic architecture. It does not implement AI agents, sequential chains, autonomous decision-making, or tool-based reasoning. The workflow is a structured RAG pipeline rather than an agent-based system.
+
+Conversational memory or buffer memory is not implemented; each query is processed independently without maintaining chat history. Logging is implemented in the backend to track user queries and errors for debugging purposes. Evaluation of system performance is currently performed through manual testing rather than automated evaluation frameworks.
+
+Overall, the project implements a structured RAG-based AI Study Assistant using React.js, Node.js, FastAPI, ChromaDB, embedding models, prompt templates, and similarity search to provide accurate, context-aware, and efficient study assistance.

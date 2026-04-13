@@ -1,0 +1,51 @@
+🧩 What is OOSE
+Software development using object-oriented principles
+Focus on objects, classes, and interactions
+Combines OOP + Software Engineering practices
+🧠 Key Concepts
+Object → real-world entity (has data + behavior)
+Class → blueprint of objects
+Encapsulation → hide data
+Inheritance → reuse code
+Polymorphism → one interface, many forms
+Abstraction → show only essentials
+🔄 OOSE Process
+Requirement Analysis
+System Design
+Implementation
+Testing
+Maintenance
+📊 UML in OOSE
+Used for visual modeling
+Common diagrams:
+Use Case Diagram
+Class Diagram
+Sequence Diagram
+Activity Diagram
+👥 Use Case Concept
+Represents user interaction with system
+Actors + system behavior
+Helps in requirement understanding
+🏗️ Class Diagram
+Shows:
+Classes
+Attributes
+Methods
+Relationships (association, inheritance)
+🔁 Sequence Diagram
+Shows flow of messages
+Interaction between objects over time
+⚙️ Advantages of OOSE
+Easy to maintain
+Reusable code
+Scalable systems
+Real-world modeling
+⚠️ Disadvantages
+Complex for beginners
+Requires proper design
+Slightly more overhead
+🌍 Applications
+Web applications
+Mobile apps
+Enterprise systems
+Game development

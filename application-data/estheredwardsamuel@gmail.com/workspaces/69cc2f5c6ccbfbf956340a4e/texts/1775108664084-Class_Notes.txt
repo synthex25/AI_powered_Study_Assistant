@@ -1,0 +1,41 @@
+📊 What is Data Science
+Field that uses data to extract insights
+Combines:
+Programming
+Statistics
+Machine Learning
+Goal → make decisions from data
+❓ Why Data Science is Used
+To predict future trends
+To analyze large data
+To improve decision making
+To automate processes
+
+👉 Example:
+
+Netflix recommends movies
+Amazon suggests products
+💡 Simple Example
+
+Problem: Predict student performance
+
+Input → attendance, marks, study time
+Process → analyze + apply ML model
+Output → predict pass/fail
+🛠️ Techniques Used
+Data Cleaning → remove errors
+Data Visualization → graphs, charts
+Machine Learning → prediction models
+Statistical Analysis → find patterns
+Feature Engineering → improve data quality
+⚙️ Technologies Used
+Python (NumPy, Pandas, Scikit-learn)
+R Programming
+SQL (database handling)
+Power BI / Tableau (visualization)
+TensorFlow / PyTorch (deep learning)
+🌍 Real-World Applications
+Healthcare → disease prediction
+Finance → fraud detection
+E-commerce → recommendation systems
+Social media → content suggestions

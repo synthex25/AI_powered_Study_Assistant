@@ -1,0 +1,6 @@
+Planned edits for workspace.py:
+- Replace long f-strings in error messages with concatenation.
+- Replace source_url.startswith(...) with is_http variable.
+- Break long await calls across lines.
+- Shorten long extracted messages and metadata dict lines.
+- Reduce long header concatenation by creating temporary header variables.
