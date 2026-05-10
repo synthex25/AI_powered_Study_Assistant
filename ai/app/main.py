@@ -15,19 +15,13 @@ app = FastAPI(
 )
 
 # CORS middleware
-# NOTE: On this machine, 'localhost' resolves to ::1 (IPv6) which is intercepted
-# by Docker. Use 127.0.0.1 explicitly for all FastAPI URLs in the frontend.
+# Allow all origins temporarily for easy deployment. You can restrict this later.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",    # Vite (IPv6 path)
-        "http://127.0.0.1:5173",   # Vite (IPv4 path)
-        "http://localhost:4000",    # Node backend
-        "http://127.0.0.1:4000",   # Node backend (IPv4)
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "Accept"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # /api/* routes (workspace, chat REST, progress)
