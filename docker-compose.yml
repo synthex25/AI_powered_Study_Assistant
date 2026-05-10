@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: 
+      context: ./frontend
+    ports:
+      - "5173:80" # Maps local port 5173 to container's port 80 (nginx)
+    depends_on:
+      - backend
+      - ai_service
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+
+  ai_service:
+    build:
+      context: ./ai
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./ai/.env
+    volumes:
+      - ./ai/chroma_db:/app/chroma_db
+      - ./ai/application-data:/app/application-data
+    restart: unless-stopped
