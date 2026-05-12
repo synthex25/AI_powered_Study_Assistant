@@ -127,7 +127,7 @@ Before you begin, make sure you have the following installed:
 
 ```bash
 git clone <repo-url>
-cd AI-Study-Tutor
+cd AI_powered_Study_Assistant
 ```
 
 ---
