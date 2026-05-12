@@ -11,14 +11,12 @@ interface RetryConfig extends InternalAxiosRequestConfig {
 
 const NODE_BASE_URL =
   import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_NODE_APP ||
-  "http://localhost:4000";
+  import.meta.env.VITE_NODE_APP;
 
 const FASTAPI_BASE_URL =
   import.meta.env.VITE_AI_URL ||
   import.meta.env.VITE_FASTAPI_URL ||
-  import.meta.env.VITE_FAST_API ||
-  "http://localhost:8000";
+  import.meta.env.VITE_FAST_API;
 
 // ============================================================================
 // Shared token refresh state

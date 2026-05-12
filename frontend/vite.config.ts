@@ -14,8 +14,12 @@ export default defineConfig({
     port: 5173, // Your Vite port
     strictPort: true, // Ensures the same port is used
     cors: true, // Enable CORS (optional)
-    allowedHosts: ["mindgrasp.jaydesk.in"],
+    // Allow common dev + prod hosts (helps when testing via localhost/IP/LAN).
+    allowedHosts: ["mindgrasp.jaydesk.in", "ai-powered-study-assistant-hazel.vercel.app", "localhost", "127.0.0.1"],
+    // Google OAuth (GIS) uses popups + postMessage; a strict COOP can break that flow.
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+    },
   },
 })
-
 

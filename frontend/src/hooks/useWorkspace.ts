@@ -309,14 +309,31 @@ export function useWorkspace(workspaceId?: string) {
       
       // Prepare sources for FastAPI
       // FastAPI expects: { id: string, type: "pdf"|"url"|"text", name: string, url?: string, content?: string }
-      const sourcesForAI = workspace.sources.map(s => ({
-        id: s._id,
-        type: s.type,
-        name: s.name,
-        // For PDFs and text files, we send the s3Key if available, otherwise the sourceUrl
-        url: s.s3Key || s.sourceUrl,
-        // For text sources, also send the content directly if available
-        content: s.content || undefined
+      // IMPORTANT: Prefer signed URLs from the Node backend.
+      // Passing raw `s3Key` requires the FastAPI service to have AWS creds/bucket access,
+      // which often isn't true in dev or hosted environments and leads to "no content extracted".
+      const sourcesForAI = await Promise.all(workspace.sources.map(async (s) => {
+        let resolvedUrl = s.sourceUrl || s.s3Key;
+
+        // For stored files (pdf/text), ask backend for a signed URL when possible.
+        if ((s.type === 'pdf' || s.type === 'text') && s._id) {
+          try {
+            const result = await workspaceService.getSourceUrl(workspace._id, s._id);
+            if (result?.url) resolvedUrl = result.url;
+          } catch (e) {
+            // Fall back to existing fields; FastAPI may still handle http(s) URLs.
+            console.warn('[Workspace] Failed to resolve signed URL for source', s._id, e);
+          }
+        }
+
+        return {
+          id: s._id,
+          type: s.type,
+          name: s.name,
+          url: resolvedUrl,
+          // For text sources, also send the content directly if available
+          content: s.content || undefined,
+        };
       }));
 
       // Call FastAPI directly

@@ -19,8 +19,7 @@ interface ChatBoxProps {
 
 const FASTAPI_URL =
   import.meta.env.VITE_AI_URL ||
-  import.meta.env.VITE_FASTAPI_URL ||
-  'http://localhost:8000';
+  import.meta.env.VITE_FASTAPI_URL;
 
 const QUICK_PROMPTS = [
   'Summarize the key points',

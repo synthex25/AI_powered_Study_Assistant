@@ -123,9 +123,9 @@ export const authService = {
    * Refresh access token using refresh token
    * Uses raw axios to avoid interceptor loops
    */
-  refreshToken: async (refreshToken: string): Promise<RefreshResponse> => {
-    const baseUrl =
-      (import.meta.env.VITE_API_URL || import.meta.env.VITE_NODE_APP || 'http://localhost:4000') + '/api';
+   refreshToken: async (refreshToken: string): Promise<RefreshResponse> => {
+     const baseUrl =
+       (import.meta.env.VITE_API_URL || import.meta.env.VITE_NODE_APP) + '/api';
     const response = await axios.post<RefreshResponse>(
       `${baseUrl}/auth/refresh-token`,
       { refreshToken }

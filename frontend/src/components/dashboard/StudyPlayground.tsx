@@ -146,10 +146,9 @@ const StudyPlayground: FC = () => {
 
   useEffect(() => {
     if (!wsGenerating || !workspace?._id) return;
-    const FASTAPI_URL =
-      import.meta.env.VITE_AI_URL ||
-      import.meta.env.VITE_FASTAPI_URL ||
-      'http://localhost:8000';
+const FASTAPI_URL =
+  import.meta.env.VITE_AI_URL ||
+  import.meta.env.VITE_FASTAPI_URL;
     const eventSource = new EventSource(`${FASTAPI_URL}/api/progress/stream/${workspace._id}`);
     eventSource.onmessage = (event) => {
       try {
