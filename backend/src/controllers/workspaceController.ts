@@ -180,7 +180,7 @@ export const workspaceController = {
       // Upload to storage (S3 or local based on config)
       const { key } = await storageService.uploadPDF(id, file.originalname, file.buffer, req.user?.email);
 
-      // Create source record
+      // Create source record with direct content for reliability
       const source = await Source.create({
         workspaceId: id,
         type: 'pdf',
@@ -188,7 +188,9 @@ export const workspaceController = {
         s3Key: key,
         s3Bucket: config.aws.s3Bucket,
         fileSize: file.size,
+        fileContent: file.buffer.toString('base64'), // Store in DB
       });
+
 
       // Add to workspace
       workspace.sources.push(source._id);
@@ -226,8 +228,10 @@ export const workspaceController = {
         s3Key: key,
         s3Bucket: config.aws.s3Bucket,
         fileSize: Buffer.byteLength(content, 'utf-8'),
+        fileContent: content, // Store in DB
         extractedTextPreview: content.substring(0, 500),
       });
+
 
       // Add to workspace
       workspace.sources.push(source._id);
@@ -386,38 +390,46 @@ export const workspaceController = {
         (workspace.sources as unknown as ISource[]).map(async (source) => {
           let content: string | null = null;
           let url: string | null = null;
-
           try {
             if (source.type === 'pdf') {
-              // ALWAYS send PDF as Base64 to avoid ephemeral storage issues
-              logger.info(`[Workspace] Sending PDF as Base64: ${source.name}`);
-              try {
-                if (source.s3Key) {
+              // Priority 1: Use content stored in DB (most reliable on Render)
+              if (source.fileContent) {
+                content = source.fileContent;
+                logger.info(`[Workspace] Using PDF content from DB: ${source.name} (${content.length} chars)`);
+              } 
+              // Priority 2: Try to read from storage if DB is empty
+              else if (source.s3Key) {
+                logger.info(`[Workspace] PDF content missing from DB, trying disk: ${source.name}`);
+                try {
                   const buf = await storageService.getFileBuffer(source.s3Key);
                   content = buf.toString('base64');
-                  logger.info(`[Workspace] PDF bytes read: ${buf.length} -> Base64: ${content.length}`);
+                } catch (readErr: any) {
+                  logger.error(`[Workspace] FAILED TO READ PDF FROM DISK: ${source.name} - ${readErr.message}`);
                 }
-              } catch (readErr: any) {
-                logger.error(`[Workspace] FAILED TO READ PDF: ${source.name} - ${readErr.message}`);
+              }
+              
+              if (content) {
+                logger.info(`[Workspace] Sending PDF as Base64: ${source.name} (${content.length} chars)`);
               }
             } else if (source.type === 'text') {
-              // Send text content directly
-              if (source.s3Key) {
+              content = source.fileContent || null;
+              if (!content && source.s3Key) {
                 content = await storageService.getFileContent(source.s3Key);
-                logger.info(`[Workspace] Sending text content: ${source.name}`);
               }
+              logger.info(`[Workspace] Sending text content: ${source.name}`);
             } else if (source.type === 'url') {
               url = source.sourceUrl || null;
               logger.info(`[Workspace] Sending URL source: ${source.name}`);
             }
 
-            // Fallback for non-PDF sources that still need a signed URL
+            // Fallback for signed URL (e.g. for frontend display or S3 fallback)
             if (!content && !url && source.s3Key) {
               url = await storageService.getSignedReadUrl(source.s3Key);
             }
           } catch (err) {
             logger.error(`[Workspace] Error preparing source ${source.name}: ${err}`);
           }
+
 
           return {
             id: source._id,

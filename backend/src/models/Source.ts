@@ -17,6 +17,10 @@ export interface ISource extends Document {
   // For URL sources
   sourceUrl?: string;
   
+  // Raw file content (Base64 for PDFs, plain text for notes)
+  // Storing here avoids ephemeral storage issues on platforms like Render
+  fileContent?: string;
+
   // Preview of extracted content
   extractedTextPreview?: string;
   
@@ -53,6 +57,9 @@ const SourceSchema = new Schema<ISource>(
     },
     sourceUrl: {
       type: String,
+    },
+    fileContent: {
+      type: String, // Store Base64 or plain text
     },
     extractedTextPreview: {
       type: String,
