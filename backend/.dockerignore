@@ -1,4 +1,3 @@
-node_modules
 dist
-.env
+# .env is allowed for now to sync with Render
 .DS_Store
