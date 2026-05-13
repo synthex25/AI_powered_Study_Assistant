@@ -181,6 +181,7 @@ export const workspaceController = {
       const { key } = await storageService.uploadPDF(id, file.originalname, file.buffer, req.user?.email);
 
       // Create source record with direct content for reliability
+      const base64Data = file.buffer.toString('base64');
       const source = await Source.create({
         workspaceId: id,
         type: 'pdf',
@@ -188,8 +189,10 @@ export const workspaceController = {
         s3Key: key,
         s3Bucket: config.aws.s3Bucket,
         fileSize: file.size,
-        fileContent: file.buffer.toString('base64'), // Store in DB
+        fileContent: base64Data, // Store in DB
       });
+
+      logger.info(`[Upload] Stored Base64 PDF in MongoDB: ${base64Data.length} chars`);
 
 
       // Add to workspace
@@ -398,7 +401,7 @@ export const workspaceController = {
               // Priority 1: Use content stored in DB (most reliable on Render)
               if (source.fileContent) {
                 content = source.fileContent;
-                logger.info(`[Workspace] Using PDF content from DB: ${source.name} (${content.length} chars)`);
+                logger.info(`[Workspace] Sending Base64 PDF content: ${content.length} chars`);
               } 
               // Priority 2: Try to read from storage if DB is empty
               else if (source.s3Key) {
@@ -412,7 +415,9 @@ export const workspaceController = {
               }
               
               if (content) {
-                logger.info(`[Workspace] Sending PDF as Base64: ${source.name} (${content.length} chars)`);
+                // Done for PDF
+              } else {
+                logger.error(`[Workspace] PDF content missing for ${source.name} - Extraction will fail.`);
               }
             } else if (source.type === 'text') {
               content = source.fileContent || null;
@@ -426,7 +431,8 @@ export const workspaceController = {
             }
 
             // Fallback for signed URL (e.g. for frontend display or S3 fallback)
-            if (!content && !url && source.s3Key) {
+            // NEVER for PDFs anymore as we use direct Base64
+            if (!content && !url && source.s3Key && source.type !== 'pdf') {
               url = await storageService.getSignedReadUrl(source.s3Key);
             }
           } catch (err) {
