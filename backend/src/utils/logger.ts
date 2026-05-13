@@ -11,29 +11,45 @@ const formatLog = (level: LogLevel, message: string, meta?: unknown): LogEntry =
   timestamp: new Date().toISOString(),
   level,
   message,
-  meta,
+  meta: meta instanceof Error ? { message: meta.message, stack: meta.stack, ...meta } : meta,
 });
 
 const log = (level: LogLevel, message: string, meta?: unknown): void => {
   const entry = formatLog(level, message, meta);
-  const logString = `[${entry.timestamp}] [${entry.level.toUpperCase()}] ${entry.message}`;
+  let metaString = '';
+  
+  if (meta) {
+    if (meta instanceof Error) {
+      metaString = `\n${meta.stack || meta.message}`;
+    } else {
+      try {
+        metaString = `\n${JSON.stringify(meta, null, 2)}`;
+      } catch (e) {
+        metaString = `\n[Unserializable Meta]`;
+      }
+    }
+  }
+
+  const logString = `[${entry.timestamp}] [${entry.level.toUpperCase()}] ${entry.message}${metaString}`;
+
 
   switch (level) {
     case 'error':
-      console.error(logString, meta ? JSON.stringify(meta, null, 2) : '');
+      console.error(logString);
       break;
     case 'warn':
-      console.warn(logString, meta ? JSON.stringify(meta, null, 2) : '');
+      console.warn(logString);
       break;
     case 'debug':
       if (process.env.NODE_ENV !== 'production') {
-        console.debug(logString, meta ? JSON.stringify(meta, null, 2) : '');
+        console.debug(logString);
       }
       break;
     default:
-      console.log(logString, meta ? JSON.stringify(meta, null, 2) : '');
+      console.log(logString);
   }
 };
+
 
 const logger = {
   info: (message: string, meta?: unknown) => log('info', message, meta),
