@@ -130,8 +130,10 @@ class LocalStorageProvider implements IStorageProvider {
 
   async getFileBuffer(key: string): Promise<Buffer> {
     const filePath = this.getFullPath(key);
+    logger.debug(`[LocalStorage] Reading file buffer from: ${filePath}`);
     return await readFile(filePath);
   }
+
 
   async fileExists(key: string): Promise<boolean> {
     const filePath = this.getFullPath(key);

@@ -70,7 +70,7 @@ const config: Config = {
   fastapiUrl: process.env.FASTAPI_URL || 'http://localhost:8000',
   // Storage configuration
   storageProvider: (process.env.STORAGE_PROVIDER || 'local') as 's3' | 'local',
-  localStoragePath: process.env.LOCAL_STORAGE_PATH || '../application-data',  // Shared folder at project root
+  localStoragePath: process.env.LOCAL_STORAGE_PATH || './application-data',  // Shared folder at project root
 };
 
 export default config;
