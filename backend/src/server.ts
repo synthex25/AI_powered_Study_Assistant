@@ -43,7 +43,7 @@ app.use('/storage', express.static(storagePath));
 app.get('/health', (_req, res) => {
   res.json({ 
     status: 'ok', 
-    version: '1.0.6',
+    version: '1.0.7',
     timestamp: new Date().toISOString(),
     deployedAt: '2026-05-13T12:45:00Z' 
   });

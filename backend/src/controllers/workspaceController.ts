@@ -181,7 +181,10 @@ export const workspaceController = {
       const { key } = await storageService.uploadPDF(id, file.originalname, file.buffer, req.user?.email);
 
       // Create source record with direct content for reliability
+      logger.info(`[Upload] File buffer size: ${file.buffer.length}`);
       const base64Data = file.buffer.toString('base64');
+      logger.info(`[Upload] Base64 length: ${base64Data.length}`);
+
       const source = await Source.create({
         workspaceId: id,
         type: 'pdf',
@@ -192,7 +195,11 @@ export const workspaceController = {
         fileContent: base64Data, // Store in DB
       });
 
-      logger.info(`[Upload] Stored Base64 PDF in MongoDB: ${base64Data.length} chars`);
+      // Verify save
+      const verify = await Source.findById(source._id);
+      logger.info(`[Upload] MongoDB save complete. Source ID: ${source._id}`);
+      logger.info(`[Upload] VERIFY fileContent exists: ${!!verify?.fileContent}`);
+      logger.info(`[Upload] Stored Base64 PDF in MongoDB: ${verify?.fileContent?.length || 0} chars`);
 
 
       // Add to workspace
@@ -396,7 +403,7 @@ export const workspaceController = {
           try {
             if (source.type === 'pdf') {
               logger.info(`[Workspace] Preparing PDF: ${source.name}`);
-              logger.debug(`[Workspace] DB Content present: ${!!source.fileContent}`);
+              logger.info(`[Workspace] MongoDB fileContent exists: ${!!source.fileContent}`);
               
               // Priority 1: Use content stored in DB (most reliable on Render)
               if (source.fileContent) {

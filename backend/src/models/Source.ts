@@ -60,6 +60,7 @@ const SourceSchema = new Schema<ISource>(
     },
     fileContent: {
       type: String, // Store Base64 or plain text
+      default: null,
     },
     extractedTextPreview: {
       type: String,

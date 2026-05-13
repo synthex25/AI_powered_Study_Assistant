@@ -68,4 +68,7 @@ router.get('/:id/sources/:sourceId/url', workspaceController.getSourceUrl);
 // Update generated content
 router.patch('/:id/generated-content', workspaceController.updateGeneratedContent);
 
+// Generate content (notes, flashcards, quizzes)
+router.post('/:id/generate', workspaceController.generateContent);
+
 export default router;
