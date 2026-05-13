@@ -381,68 +381,74 @@ export const workspaceController = {
       workspace.isProcessing = true;
       await workspace.save();
 
-      // Prepare sources with signed URLs
-      const sourcesWithUrls = await Promise.all(
+      // Prepare sources for AI processing
+      const processedSources = await Promise.all(
         (workspace.sources as unknown as ISource[]).map(async (source) => {
-          let signedUrl: string | null = null;
           let content: string | null = null;
+          let url: string | null = null;
+
           try {
-            if (source.s3Key) {
-              signedUrl = await storageService.getSignedReadUrl(source.s3Key);
-              logger.info(`[Workspace] Generated signed URL for ${source.type}: ${source.name}`);
-              logger.debug(`[Workspace] URL: ${signedUrl}`);
-
-              // If we're using local storage, include the file contents directly
-              if (config.storageProvider === 'local') {
-                try {
-                  if (source.type === 'text') {
-                    content = await storageService.getFileContent(source.s3Key);
-                    logger.info(`[Workspace] Read local text: ${content.length} chars`);
-                  } else if (source.type === 'pdf') {
-                    const buf = await storageService.getFileBuffer(source.s3Key);
-                    content = buf.toString('base64');
-                    logger.info(`[Workspace] Read local PDF: ${buf.length} bytes -> Base64: ${content.length} chars`);
-                  }
-                } catch (readErr: any) {
-                  logger.error(`[Workspace] FAILED TO READ LOCAL FILE: ${source.name} (${source.s3Key}) - Error: ${readErr.message}`);
+            if (source.type === 'pdf') {
+              // ALWAYS send PDF as Base64 to avoid ephemeral storage issues
+              logger.info(`[Workspace] Sending PDF as Base64: ${source.name}`);
+              try {
+                if (source.s3Key) {
+                  const buf = await storageService.getFileBuffer(source.s3Key);
+                  content = buf.toString('base64');
+                  logger.info(`[Workspace] PDF bytes read: ${buf.length} -> Base64: ${content.length}`);
                 }
+              } catch (readErr: any) {
+                logger.error(`[Workspace] FAILED TO READ PDF: ${source.name} - ${readErr.message}`);
               }
+            } else if (source.type === 'text') {
+              // Send text content directly
+              if (source.s3Key) {
+                content = await storageService.getFileContent(source.s3Key);
+                logger.info(`[Workspace] Sending text content: ${source.name}`);
+              }
+            } else if (source.type === 'url') {
+              url = source.sourceUrl || null;
+              logger.info(`[Workspace] Sending URL source: ${source.name}`);
             }
-          } catch (urlError) {
-            logger.error(`[Workspace] Failed to process source ${source.name}: ${urlError}`);
-          }
 
+            // Fallback for non-PDF sources that still need a signed URL
+            if (!content && !url && source.s3Key) {
+              url = await storageService.getSignedReadUrl(source.s3Key);
+            }
+          } catch (err) {
+            logger.error(`[Workspace] Error preparing source ${source.name}: ${err}`);
+          }
 
           return {
             id: source._id,
             type: source.type,
             name: source.name,
-            url: source.type === 'url' ? source.sourceUrl : signedUrl,
+            url,
             content,
           };
         })
       );
 
-      // Verify we have at least some URLs
-      const sourcesWithValidUrls = sourcesWithUrls.filter(s => s.url);
-      if (sourcesWithValidUrls.length === 0) {
+      // Verify we have at least some processable content
+      const validSources = processedSources.filter(s => s.content || s.url);
+      if (validSources.length === 0) {
         workspace.isProcessing = false;
         await workspace.save();
-        logger.error(`No valid source URLs could be generated for workspace ${id}`);
+        logger.error(`No valid sources could be prepared for workspace ${id}`);
         return res.status(400).json({ 
-          error: 'Unable to process workspace: No valid source URLs could be generated. Please ensure S3 credentials are configured correctly.' 
+          error: 'Unable to process workspace: No valid source content or URLs could be generated.' 
         });
       }
 
-      logger.info(`Processing workspace ${id} with ${sourcesWithValidUrls.length} source(s)`);
-      sourcesWithValidUrls.forEach(s => {
-        logger.info(`  - ${s.type}: ${s.name}`);
+      logger.info(`Processing workspace ${id} with ${validSources.length} source(s)`);
+      validSources.forEach(s => {
+        logger.info(`  - ${s.type}: ${s.name} (${s.content ? 'Base64' : 'URL'})`);
       });
 
       // Call FastAPI for processing with authentication
       const token = req.headers.authorization || '';
       const aiUrl = `${config.fastapiUrl}/api/workspace/process-workspace`;
-      logger.info(`Calling FastAPI at: ${aiUrl}`);
+      logger.info(`Calling AI Service at: ${aiUrl}`);
       
       let response;
       try {
@@ -450,7 +456,7 @@ export const workspaceController = {
           aiUrl,
           {
             workspaceId: id,
-            sources: sourcesWithValidUrls,
+            sources: validSources,
           },
           {
             timeout: 300000, // 5 minute timeout for processing

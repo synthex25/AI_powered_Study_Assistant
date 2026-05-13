@@ -126,34 +126,21 @@ async def process_workspace(
                 # TYPE: PDF - Fetch from S3 and extract text
                 # ─────────────────────────────────────────────────────────────
                 if source_type == "pdf":
-                    # Allow direct content (base64) from caller
-                    # (local storage)
+                    # Direct PDF content processing (Base64 from backend)
                     if getattr(source, 'content', None):
                         try:
                             import base64
                             raw_bytes = base64.b64decode(source.content)
-                            print(
-                                "[Workspace] Using provided PDF content for "
-                                f"{source_name} ({len(raw_bytes)} bytes after decoding)"
-                            )
-                            # Extract text from provided PDF bytes
-                            extract_pdf = (
-                                document_processor.extract_text_from_pdf_bytes
-                            )
+                            print(f"[Workspace] Using provided PDF content: {source_name}")
+                            print(f"[Workspace] PDF bytes received: {len(raw_bytes)}")
+                            
+                            # Extract text using PyMuPDF bytes processor
+                            extract_pdf = document_processor.extract_text_from_pdf_bytes
                             content = extract_pdf(raw_bytes)
-                            print(
-                                f"[Workspace] Direct PDF extraction result for {source_name}: "
-                                f"{len(content) if content else 0} characters"
-                            )
-
+                            print(f"[Workspace] Extracted {len(content) if content else 0} chars from PDF")
 
                             if content and content.strip():
-                                print(
-                                    "[Workspace] ✓ PDF extracted: "
-                                    + str(len(content))
-                                    + " chars from "
-                                    + source_name
-                                )
+                                print(f"[Workspace] ✓ PDF extracted successfully: {source_name}")
                                 processed_count += 1
                                 # Store in vector DB for RAG
                                 chunks = chunk_text(content)
@@ -168,153 +155,22 @@ async def process_workspace(
                                         }
                                     ],
                                 )
-                                header = (
-                                    "## Source: " + source_name + " (PDF)\n\n"
-                                )
+                                header = f"## Source: {source_name} (PDF)\n\n"
                                 all_text_parts.append(header + content)
                             else:
-                                msg = (
-                                    "PDF extraction returned empty content: "
-                                    + source_name
-                                )
+                                msg = f"PDF extraction returned empty content: {source_name}"
                                 print(f"[Workspace] ✗ {msg}")
                                 failed_sources.append(msg)
                         except Exception as e:
-                            msg = f"Failed to decode provided PDF content for {source_name}: {str(e)[:100]}"
+                            msg = f"Failed to process provided PDF content for {source_name}: {str(e)[:100]}"
                             print(f"[Workspace] ✗ {msg}")
                             failed_sources.append(msg)
-                            continue
                     else:
-                        if not source_url:
-                            msg = f"No URL/S3 key for PDF: {source_name}"
-                            print(f"[Workspace] {msg}")
-                            failed_sources.append(msg)
-                            continue
-                        try:
-                            # Fetch PDF bytes from S3 or signed URL
-                            print(
-                                "[Workspace] Fetching PDF from: "
-                                f"{source_url[:100]}..."
-                            )
-                            
-                            # Check if source_url is a URL (signed URL or HTTP URL)
-                            is_http = source_url.startswith(
-                                ("http://", "https://", "file://")
-                            )
-                            if is_http:
-                                print(
-                                    "[Workspace] Using URL fetch for PDF: "
-                                    f"{source_name}"
-                                )
-                                try:
-                                    raw_bytes = await fetch_content_from_url_bytes(
-                                        source_url
-                                    )
-                                    print(
-                                        "[Workspace] URL fetch succeeded, got "
-                                        + str(len(raw_bytes))
-                                        + " bytes"
-                                    )
-                                except Exception as url_err:
-                                    msg = (
-                                        "PDF URL fetch failed for " + source_name + ": "
-                                        + str(url_err)[:100]
-                                    )
-                                    print(f"[Workspace] ✗ {msg}")
-                                    failed_sources.append(msg)
-                                    continue
-                            else:
-                                # It's an S3 key
-                                print(
-                                    "[Workspace] Using S3 fetch for PDF: "
-                                    f"{source_name}"
-                                )
-                                try:
-                                    raw_bytes = await s3_utils.get_file_content_async(
-                                        source_url
-                                    )
-                                    print(
-                                        "[Workspace] S3 fetch succeeded, got "
-                                        + str(len(raw_bytes))
-                                        + " bytes"
-                                    )
-                                except Exception as s3_err:
-                                    msg = (
-                                        "PDF S3 fetch failed for " + source_name + ": "
-                                        + str(s3_err)[:100]
-                                    )
-                                    print(f"[Workspace] ✗ {msg}")
-                                    failed_sources.append(msg)
-                                    continue
-                            
-                            print(
-                                f"[Workspace] Fetching PDF for {source_name}, source_url has value: {bool(source_url)}"
-                            )
-                            extract_pdf = (
-                                document_processor.extract_text_from_pdf_bytes
-                            )
-                            content = extract_pdf(raw_bytes)
-                            print(
-                                f"[Workspace] PDF Extraction result for {source_name}: "
-                                f"{len(content) if content else 0} characters"
-                            )
+                        msg = f"No direct content provided for PDF: {source_name}. URL fetch is disabled for PDFs."
+                        print(f"[Workspace] ✗ {msg}")
+                        failed_sources.append(msg)
+                    continue
 
-
-                            if content and content.strip():
-                                print(
-                                    "[Workspace] ✓ PDF extracted: "
-                                    + str(len(content))
-                                    + " chars from "
-                                    + source_name
-                                )
-                                processed_count += 1
-                                # Store in vector DB for RAG
-                                chunks = chunk_text(content)
-                                vector_store.add_documents(
-                                    doc_id=workspace_id,
-                                    chunks=chunks,
-                                    metadatas=[
-                                        {
-                                            "source": source_name,
-                                            "type": "pdf",
-                                            "workspace_id": workspace_id,
-                                        }
-                                    ],
-                                )
-                                all_text_parts.append(
-                                    "## Source: " + source_name + " (PDF)\n\n" + content
-                                )
-                            else:
-                                msg = (
-                                    "PDF extraction returned empty content: "
-                                    + source_name
-                                )
-                                print(f"[Workspace] ✗ {msg}")
-                                failed_sources.append(msg)
-                        except ClientError as e:
-                            err = e.response.get('Error', {})
-                            error_code = err.get('Code', 'Unknown')
-                            msg = (
-                                "S3 Error (" + str(error_code) + ") for PDF "
-                                + source_name
-                                + ": "
-                                + str(e)[:100]
-                            )
-                            print(f"[Workspace] ✗ {msg}")
-                            failed_sources.append(msg)
-                        except Exception as e:
-                            msg = (
-                                "PDF error for "
-                                + source_name
-                                + ": "
-                                + type(e).__name__
-                                + ": "
-                                + str(e)[:100]
-                            )
-                            print(f"[Workspace] ✗ {msg}")
-                            failed_sources.append(msg)
-                            import traceback
-                            traceback.print_exc()
                 
                 # ─────────────────────────────────────────────────────────────
                 # TYPE: TEXT - Always fetch from S3 (content field is just title)
