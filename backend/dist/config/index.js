@@ -11,7 +11,9 @@ const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET', 'JWT_REFRESH_SECRET', 'GOOGL
 const validateEnv = () => {
     const missing = requiredEnvVars.filter((key) => !process.env[key]);
     if (missing.length > 0) {
-        throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+        const errorMsg = `Missing required environment variables: ${missing.join(', ')}`;
+        console.error('❌ CONFIG ERROR:', errorMsg);
+        throw new Error(errorMsg);
     }
 };
 validateEnv();
@@ -25,7 +27,7 @@ const config = {
     jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
     googleClientId: process.env.GOOGLE_CLIENT_ID,
     frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
-    corsOrigins: (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:5173').split(','),
+    corsOrigins: (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:5173').split(',').map(o => o.trim()),
     emailUser: process.env.EMAIL_USER || '',
     emailPassword: process.env.EMAIL_PASSWORD || '',
     aws: {

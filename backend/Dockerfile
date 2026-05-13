@@ -13,6 +13,7 @@ COPY .env ./
 
 # Build the TypeScript code
 RUN npm run build
+RUN mkdir -p application-data
 
 # Start the Node.js application
 # Render will provide the PORT env var; we don't hardcode EXPOSE if possible,

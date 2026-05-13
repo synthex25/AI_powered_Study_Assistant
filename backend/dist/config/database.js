@@ -9,6 +9,10 @@ const index_1 = __importDefault(require("./index"));
 const logger_1 = __importDefault(require("../utils/logger"));
 const connectDatabase = async () => {
     try {
+        console.log('🔄 Connecting to MongoDB...');
+        // Mask URI for safety but show prefix
+        const maskedUri = index_1.default.mongoUri.substring(0, 20) + '...';
+        console.log('URI:', maskedUri);
         await mongoose_1.default.connect(index_1.default.mongoUri, {
             serverSelectionTimeoutMS: 10000,
             socketTimeoutMS: 45000,

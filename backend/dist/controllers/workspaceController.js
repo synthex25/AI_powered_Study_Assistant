@@ -10,7 +10,6 @@ const Source_1 = __importDefault(require("../models/Source"));
 const storageService_1 = require("../services/storageService");
 const config_1 = __importDefault(require("../config"));
 const logger_1 = __importDefault(require("../utils/logger"));
-const apiResponse_1 = require("../utils/apiResponse");
 /**
  * Workspace Controller - Handles all workspace and source operations
  */
@@ -317,21 +316,12 @@ exports.workspaceController = {
         try {
             const { id } = req.params;
             const userId = req.user?.userId;
-            if (!userId) {
-                (0, apiResponse_1.sendUnauthorized)(res, 'Unauthorized');
-                return;
-            }
-            logger_1.default.info('[Generate] request received', { workspaceId: id, userId });
             const workspace = await Workspace_1.default.findOne({ _id: id, userId }).populate('sources');
             if (!workspace) {
-                logger_1.default.warn('[Generate] workspace not found for user', { workspaceId: id, userId });
-                (0, apiResponse_1.sendNotFound)(res, 'Workspace not found');
-                return;
+                return res.status(404).json({ error: 'Workspace not found' });
             }
             if (workspace.sources.length === 0) {
-                logger_1.default.info('[Generate] workspace has no sources', { workspaceId: id, userId });
-                (0, apiResponse_1.sendBadRequest)(res, 'Workspace has no sources');
-                return;
+                return res.status(400).json({ error: 'Workspace has no sources' });
             }
             // Mark as processing
             workspace.isProcessing = true;
@@ -380,8 +370,9 @@ exports.workspaceController = {
                 workspace.isProcessing = false;
                 await workspace.save();
                 logger_1.default.error(`No valid source URLs could be generated for workspace ${id}`);
-                (0, apiResponse_1.sendBadRequest)(res, 'Unable to process workspace: No valid source URLs could be generated. Please ensure storage is configured correctly.');
-                return;
+                return res.status(400).json({
+                    error: 'Unable to process workspace: No valid source URLs could be generated. Please ensure S3 credentials are configured correctly.'
+                });
             }
             logger_1.default.info(`Processing workspace ${id} with ${sourcesWithValidUrls.length} source(s)`);
             sourcesWithValidUrls.forEach(s => {
@@ -390,7 +381,6 @@ exports.workspaceController = {
             // Call FastAPI for processing with authentication
             const token = req.headers.authorization || '';
             logger_1.default.info(`Calling FastAPI at: ${config_1.default.fastapiUrl}/api/workspace/process-workspace`);
-            const startedAt = Date.now();
             const response = await axios_1.default.post(`${config_1.default.fastapiUrl}/api/workspace/process-workspace`, {
                 workspaceId: id,
                 sources: sourcesWithValidUrls,
@@ -401,12 +391,6 @@ exports.workspaceController = {
                     'Content-Type': 'application/json'
                 }
             });
-            logger_1.default.info('[Generate] FastAPI response received', {
-                workspaceId: id,
-                userId,
-                status: response.status,
-                ms: Date.now() - startedAt,
-            });
             // Save generated content
             workspace.generatedContent = {
                 ...response.data,
@@ -416,32 +400,11 @@ exports.workspaceController = {
             workspace.lastProcessedAt = new Date();
             await workspace.save();
             logger_1.default.info(`Content generated for workspace: ${id}`);
-            (0, apiResponse_1.sendSuccess)(res, workspace, 'Content generated');
+            res.json(workspace);
         }
         catch (error) {
             // Reset processing flag on error
             await Workspace_1.default.updateOne({ _id: req.params.id }, { isProcessing: false });
-            if (axios_1.default.isAxiosError(error)) {
-                logger_1.default.error('[Generate] FastAPI call failed', {
-                    workspaceId: req.params.id,
-                    userId: req.user?.userId,
-                    status: error.response?.status,
-                    data: error.response?.data,
-                    message: error.message,
-                });
-                const statusCode = error.response?.status || 502;
-                const message = error.response?.data?.detail ||
-                    error.response?.data?.error ||
-                    error.response?.data?.message ||
-                    'AI service error';
-                (0, apiResponse_1.sendError)(res, message, statusCode, 'AI_SERVICE_ERROR');
-                return;
-            }
-            logger_1.default.error('[Generate] unexpected error', {
-                workspaceId: req.params.id,
-                userId: req.user?.userId,
-                message: error?.message,
-            });
             next(error);
         }
     },

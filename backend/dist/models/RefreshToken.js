@@ -44,10 +44,6 @@ const RefreshTokenSchema = new mongoose_1.Schema({
         unique: true,
         index: true
     },
-    tokenPrefix: {
-        type: String,
-        index: true, // fast O(1) lookup before bcrypt
-    },
     userId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User',

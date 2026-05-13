@@ -118,16 +118,28 @@ def extract_text_from_pdf_bytes(pdf_bytes: bytes) -> str:
     """Extract text from PDF bytes."""
     try:
         if not pdf_bytes:
+            print("[DocumentProcessor] ✗ PDF bytes are empty!")
             return ""
             
+        print(f"[DocumentProcessor] Attempting fitz extraction from {len(pdf_bytes)} bytes...")
         with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
+            print(f"[DocumentProcessor] PDF opened, pages: {len(doc)}")
             text_parts = []
-            for page in doc:
-                text_parts.append(page.get_text())
-        return "\n".join(text_parts)
+            for i, page in enumerate(doc):
+                page_text = page.get_text()
+                print(f"[DocumentProcessor]   - Page {i+1}: {len(page_text)} chars")
+                text_parts.append(page_text)
+        
+        full_text = "\n".join(text_parts)
+        print(f"[DocumentProcessor] ✓ Extraction complete: {len(full_text)} total chars")
+        return full_text
     except Exception as e:
-        print(f"Error extracting text from PDF bytes: {e}")
+        print(f"[DocumentProcessor] ✗ CRITICAL ERROR during PDF extraction: {e}")
+        import traceback
+        traceback.print_exc()
         return ""
+
+
 
 
 class DocumentProcessor:

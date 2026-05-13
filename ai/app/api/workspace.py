@@ -134,7 +134,7 @@ async def process_workspace(
                             raw_bytes = base64.b64decode(source.content)
                             print(
                                 "[Workspace] Using provided PDF content for "
-                                f"{source_name} ({len(raw_bytes)} bytes)"
+                                f"{source_name} ({len(raw_bytes)} bytes after decoding)"
                             )
                             # Extract text from provided PDF bytes
                             extract_pdf = (
@@ -142,10 +142,10 @@ async def process_workspace(
                             )
                             content = extract_pdf(raw_bytes)
                             print(
-                                "[Workspace] Extracted "
-                                + str(len(content) if content else 0)
-                                + " chars from PDF"
+                                f"[Workspace] Direct PDF extraction result for {source_name}: "
+                                f"{len(content) if content else 0} characters"
                             )
+
 
                             if content and content.strip():
                                 print(
@@ -248,18 +248,17 @@ async def process_workspace(
                                     continue
                             
                             print(
-                                "[Workspace] Fetched "
-                                f"{len(raw_bytes)} bytes for PDF: {source_name}"
+                                f"[Workspace] Fetching PDF for {source_name}, source_url has value: {bool(source_url)}"
                             )
                             extract_pdf = (
                                 document_processor.extract_text_from_pdf_bytes
                             )
                             content = extract_pdf(raw_bytes)
                             print(
-                                "[Workspace] Extracted "
-                                + str(len(content) if content else 0)
-                                + " chars from PDF"
+                                f"[Workspace] PDF Extraction result for {source_name}: "
+                                f"{len(content) if content else 0} characters"
                             )
+
 
                             if content and content.strip():
                                 print(

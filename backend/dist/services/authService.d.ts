@@ -44,7 +44,7 @@ export declare const generateRefreshToken: (user: IUser) => Promise<string>;
 export declare const generateTokenPair: (user: IUser) => Promise<TokenPair>;
 /**
  * Refresh access token using a refresh token
- * Uses a tokenPrefix index for O(1) lookup before bcrypt comparison
+ * Implements token rotation for security
  */
 export declare const refreshAccessToken: (rawRefreshToken: string) => Promise<TokenPair>;
 /**

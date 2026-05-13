@@ -15,6 +15,9 @@ const workspaceRoutes_1 = __importDefault(require("./routes/workspaceRoutes"));
 const jwtAuth_1 = __importDefault(require("./middleware/jwtAuth"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const logger_1 = __importDefault(require("./utils/logger"));
+console.log('--- SERVER STARTING ---');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', process.env.PORT);
 // Initialize Express app
 const app = (0, express_1.default)();
 // CORS configuration

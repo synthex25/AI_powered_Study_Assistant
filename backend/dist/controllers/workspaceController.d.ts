@@ -53,7 +53,7 @@ export declare const workspaceController: {
     /**
      * Generate content for workspace (calls FastAPI)
      */
-    generateContent(req: AuthRequest, res: Response, next: NextFunction): Promise<void>;
+    generateContent(req: AuthRequest, res: Response, next: NextFunction): Promise<Response<any, Record<string, any>> | undefined>;
     /**
      * Update generated content for workspace (save results from FastAPI)
      */

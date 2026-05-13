@@ -84,16 +84,20 @@ exports.verifyJwtToken = verifyJwtToken;
  * Generate a cryptographically secure refresh token and store it
  */
 const generateRefreshToken = async (user) => {
+    // Generate secure random token
     const rawToken = crypto_1.default.randomBytes(64).toString('hex');
+    // Hash the token for storage
     const hashedToken = await bcryptjs_1.default.hash(rawToken, 10);
+    // Calculate expiry
     const expiresAt = new Date(Date.now() + parseExpiry(config_1.default.jwtRefreshExpiresIn));
+    // Store hashed token in database
     await RefreshToken_1.default.create({
         token: hashedToken,
-        tokenPrefix: rawToken.substring(0, 16), // fast lookup index
         userId: user._id,
         expiresAt,
     });
     logger_1.default.debug(`Refresh token created for user: ${user.email}`);
+    // Return raw token to client
     return rawToken;
 };
 exports.generateRefreshToken = generateRefreshToken;
@@ -108,22 +112,17 @@ const generateTokenPair = async (user) => {
 exports.generateTokenPair = generateTokenPair;
 /**
  * Refresh access token using a refresh token
- * Uses a tokenPrefix index for O(1) lookup before bcrypt comparison
+ * Implements token rotation for security
  */
 const refreshAccessToken = async (rawRefreshToken) => {
-    // Use first 16 chars as a fast lookup prefix stored in DB
-    const prefix = rawRefreshToken.substring(0, 16);
-    const candidates = await RefreshToken_1.default.find({
-        tokenPrefix: prefix,
+    // Find all non-revoked, non-expired tokens
+    const tokens = await RefreshToken_1.default.find({
         isRevoked: false,
         expiresAt: { $gt: new Date() },
     });
-    // Fall back to full scan if no prefix match (backward compat)
-    const pool = candidates.length > 0
-        ? candidates
-        : await RefreshToken_1.default.find({ isRevoked: false, expiresAt: { $gt: new Date() } });
+    // Find the matching token by comparing hashes
     let matchedToken = null;
-    for (const storedToken of pool) {
+    for (const storedToken of tokens) {
         const isMatch = await bcryptjs_1.default.compare(rawRefreshToken, storedToken.token);
         if (isMatch) {
             matchedToken = storedToken;
@@ -133,12 +132,15 @@ const refreshAccessToken = async (rawRefreshToken) => {
     if (!matchedToken) {
         throw new AppError_1.AuthenticationError('Invalid or expired refresh token');
     }
+    // Get the user
     const user = await User_1.default.findById(matchedToken.userId);
-    if (!user)
+    if (!user) {
         throw new AppError_1.AuthenticationError('User not found');
-    // Token rotation: revoke old, issue new
+    }
+    // Token rotation: revoke old token
     matchedToken.isRevoked = true;
     await matchedToken.save();
+    // Generate new token pair
     const newTokenPair = await (0, exports.generateTokenPair)(user);
     logger_1.default.info(`Token refreshed for user: ${user.email}`);
     return newTokenPair;

@@ -389,27 +389,29 @@ export const workspaceController = {
           try {
             if (source.s3Key) {
               signedUrl = await storageService.getSignedReadUrl(source.s3Key);
-              logger.info(`Generated signed URL for ${source.type}: ${source.name} (${source.s3Key})`);
+              logger.info(`[Workspace] Generated signed URL for ${source.type}: ${source.name}`);
+              logger.debug(`[Workspace] URL: ${signedUrl}`);
 
               // If we're using local storage, include the file contents directly
-              // so the FastAPI service can read the file even if S3 is not configured.
               if (config.storageProvider === 'local') {
                 try {
                   if (source.type === 'text') {
-                    const txt = await storageService.getFileContent(source.s3Key);
-                    content = txt;
+                    content = await storageService.getFileContent(source.s3Key);
+                    logger.info(`[Workspace] Read local text: ${content.length} chars`);
                   } else if (source.type === 'pdf') {
                     const buf = await storageService.getFileBuffer(source.s3Key);
                     content = buf.toString('base64');
+                    logger.info(`[Workspace] Read local PDF: ${buf.length} bytes -> Base64: ${content.length} chars`);
                   }
-                } catch (readErr) {
-                  logger.warn(`Failed to read local file for ${source.name}: ${readErr}`);
+                } catch (readErr: any) {
+                  logger.error(`[Workspace] FAILED TO READ LOCAL FILE: ${source.name} (${source.s3Key}) - Error: ${readErr.message}`);
                 }
               }
             }
           } catch (urlError) {
-            logger.error(`Failed to generate signed URL for ${source.name}: ${urlError}`);
+            logger.error(`[Workspace] Failed to process source ${source.name}: ${urlError}`);
           }
+
 
           return {
             id: source._id,

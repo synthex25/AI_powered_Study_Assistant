@@ -54,8 +54,6 @@ router.get('/:id/sources/:sourceId/url', workspaceController_1.default.getSource
 // ============================================================================
 // Content Generation
 // ============================================================================
-// Generate AI content for workspace
-router.post('/:id/generate', workspaceController_1.default.generateContent);
 // Update generated content
 router.patch('/:id/generated-content', workspaceController_1.default.updateGeneratedContent);
 exports.default = router;

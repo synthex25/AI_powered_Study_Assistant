@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.me = exports.completeOnboarding = exports.logout = exports.refreshToken = exports.validateToken = exports.resendOtp = exports.verifyOtp = exports.login = exports.register = exports.googleSignIn = void 0;
+exports.completeOnboarding = exports.logout = exports.refreshToken = exports.validateToken = exports.resendOtp = exports.verifyOtp = exports.login = exports.register = exports.googleSignIn = void 0;
 const authService = __importStar(require("../services/authService"));
 const apiResponse_1 = require("../utils/apiResponse");
 const errorHandler_1 = require("../middleware/errorHandler");
@@ -129,20 +129,5 @@ exports.completeOnboarding = (0, errorHandler_1.asyncHandler)(async (req, res) =
     logger_1.default.debug(`Completing onboarding for user: ${decoded.email}`);
     await authService.markOnboardingComplete(decoded.userId);
     (0, apiResponse_1.sendSuccess)(res, { hasSeenOnboarding: true }, 'Onboarding marked as complete');
-});
-// ============================================================================
-// Debug / Session
-// ============================================================================
-exports.me = (0, errorHandler_1.asyncHandler)(async (req, res) => {
-    if (!req.user) {
-        (0, apiResponse_1.sendUnauthorized)(res, 'No token provided');
-        return;
-    }
-    (0, apiResponse_1.sendSuccess)(res, {
-        userId: req.user.userId,
-        email: req.user.email,
-        name: req.user.name,
-        userType: req.user.userType,
-    });
 });
 //# sourceMappingURL=authController.js.map
