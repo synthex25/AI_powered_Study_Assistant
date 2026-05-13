@@ -11,8 +11,13 @@ import verifyToken from './middleware/jwtAuth';
 import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
 
+console.log('--- SERVER STARTING ---');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', process.env.PORT);
+
 // Initialize Express app
 const app = express();
+
 
 
 // CORS configuration
