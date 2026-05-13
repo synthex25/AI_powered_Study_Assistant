@@ -41,8 +41,14 @@ app.use('/storage', express.static(storagePath));
 
 // Health check endpoint
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    version: '1.0.5',
+    timestamp: new Date().toISOString(),
+    deployedAt: '2026-05-13T12:45:00Z' 
+  });
 });
+
 
 // API Routes
 app.use('/api/auth', authRoutes);

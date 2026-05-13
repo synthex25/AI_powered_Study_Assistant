@@ -392,6 +392,9 @@ export const workspaceController = {
           let url: string | null = null;
           try {
             if (source.type === 'pdf') {
+              logger.info(`[Workspace] Preparing PDF: ${source.name}`);
+              logger.debug(`[Workspace] DB Content present: ${!!source.fileContent}`);
+              
               // Priority 1: Use content stored in DB (most reliable on Render)
               if (source.fileContent) {
                 content = source.fileContent;
