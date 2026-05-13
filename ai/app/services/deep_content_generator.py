@@ -17,6 +17,7 @@ from app.providers.factory import get_llm_provider
 _cache: Dict[str, Dict[str, Any]] = {}
 _MAX_CACHE = 50  # keep last 50 results
 QUIZ_COUNT = 15
+FLASHCARD_COUNT = 15
 
 
 def _cache_key(text: str, language: str) -> str:
@@ -43,7 +44,7 @@ Respond with ONLY a single JSON object that matches this exact schema:
   "notes": "<article>...</article>  (rich HTML — see rules below)",
   "flashcards": [
     {{"front": "Key term or concept", "back": "Clear definition or explanation"}},
-    ...10 items...
+    ...15 items...
   ],
   "quizzes": [
     {{
@@ -68,6 +69,7 @@ FLASHCARD RULES:
 - front = a key term, concept, or short phrase (NOT a question)
 - back = a clear definition or explanation (2-3 sentences max)
 - Cover the most important vocabulary and ideas
+- Return exactly 15 flashcards (no fewer)
 
 QUIZ RULES:
 - 15 multiple-choice questions testing understanding (not just recall)
@@ -254,18 +256,63 @@ class DeepContentGenerator:
     def _offline_flashcards(self, concepts: List[str], summary: str) -> List[Dict[str, str]]:
         cards: List[Dict[str, str]] = []
         summary_bits = [s.strip() for s in re.split(r"(?<=[.!?])\s+", summary) if s.strip()]
-        for idx, concept in enumerate(concepts[:10]):
+        for idx, concept in enumerate(concepts[:FLASHCARD_COUNT]):
             back = summary_bits[idx % len(summary_bits)] if summary_bits else summary
             cards.append({
                 "front": concept,
                 "back": back[:240] if back else f"Key idea related to {concept}.",
             })
-        while len(cards) < 5:
+        while len(cards) < FLASHCARD_COUNT:
             cards.append({
                 "front": f"Core idea {len(cards) + 1}",
                 "back": summary[:240] if summary else "Review the main ideas from the notes.",
             })
-        return cards[:10]
+        return cards[:FLASHCARD_COUNT]
+
+    def _ensure_flashcard_count(
+        self,
+        flashcards: List[Dict[str, str]],
+        key_concepts: List[str],
+        summary: str,
+    ) -> List[Dict[str, str]]:
+        normalized: List[Dict[str, str]] = []
+        seen_front: set[str] = set()
+
+        for card in (flashcards or []):
+            if not isinstance(card, dict):
+                continue
+            front = str(card.get("front") or "").strip()
+            back = str(card.get("back") or "").strip()
+            if not front or not back:
+                continue
+            key = front.lower()
+            if key in seen_front:
+                continue
+            seen_front.add(key)
+            normalized.append({"front": front, "back": back})
+            if len(normalized) >= FLASHCARD_COUNT:
+                return normalized[:FLASHCARD_COUNT]
+
+        for card in self._offline_flashcards(key_concepts or [], summary or ""):
+            front = str(card.get("front") or "").strip()
+            back = str(card.get("back") or "").strip()
+            if not front or not back:
+                continue
+            key = front.lower()
+            if key in seen_front:
+                continue
+            seen_front.add(key)
+            normalized.append({"front": front, "back": back})
+            if len(normalized) >= FLASHCARD_COUNT:
+                return normalized[:FLASHCARD_COUNT]
+
+        while len(normalized) < FLASHCARD_COUNT:
+            normalized.append({
+                "front": f"Core idea {len(normalized) + 1}",
+                "back": (summary or "Review the main ideas from the notes.")[:240],
+            })
+
+        return normalized[:FLASHCARD_COUNT]
 
     def _offline_quizzes(self, concepts: List[str], summary: str) -> List[Dict[str, Any]]:
         quizzes: List[Dict[str, Any]] = []
@@ -486,6 +533,8 @@ class DeepContentGenerator:
                 q["correctAnswer"] = q.pop("correct_answer")
 
         await emit("recommendations", 90, "Building resource links...")
+
+        flashcards = self._ensure_flashcard_count(flashcards, key_concepts, summary)
 
         youtube, websites = self._build_resource_links(doc_title, key_concepts)
         recommendations   = self._build_recommendations(key_concepts, len(flashcards), len(quizzes))

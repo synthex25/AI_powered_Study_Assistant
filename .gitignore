@@ -1,4 +1,8 @@
-venv/ 
-venv/ 
-venv/ 
-venv/ 
+venv/
+node_modules/
+dist/
+ai/chroma_db/
+ai/application-data/
+backend/application-data/
+.DS_Store
+
