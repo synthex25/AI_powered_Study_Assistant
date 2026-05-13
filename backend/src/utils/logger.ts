@@ -11,7 +11,7 @@ const formatLog = (level: LogLevel, message: string, meta?: unknown): LogEntry =
   timestamp: new Date().toISOString(),
   level,
   message,
-  meta: meta instanceof Error ? { message: meta.message, stack: meta.stack, ...meta } : meta,
+  meta: meta instanceof Error ? { error: meta.message, stack: meta.stack, ...meta } : meta,
 });
 
 const log = (level: LogLevel, message: string, meta?: unknown): void => {
