@@ -34,9 +34,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from application-data
-// Using absolute path to the shared folder at project root
-const storagePath = path.resolve(__dirname, '../../application-data');
+const storagePath = path.resolve(config.localStoragePath);
+console.log('[Storage] Serving static files from:', storagePath);
 app.use('/storage', express.static(storagePath));
+
 
 // Health check endpoint
 app.get('/health', (_req, res) => {

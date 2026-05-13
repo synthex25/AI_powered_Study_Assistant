@@ -439,21 +439,33 @@ export const workspaceController = {
 
       // Call FastAPI for processing with authentication
       const token = req.headers.authorization || '';
-      logger.info(`Calling FastAPI at: ${config.fastapiUrl}/api/workspace/process-workspace`);
-      const response = await axios.post(
-        `${config.fastapiUrl}/api/workspace/process-workspace`,
-        {
-          workspaceId: id,
-          sources: sourcesWithValidUrls,
-        },
-        {
-          timeout: 300000, // 5 minute timeout for processing
-          headers: {
-            'Authorization': token,
-            'Content-Type': 'application/json'
+      const aiUrl = `${config.fastapiUrl}/api/workspace/process-workspace`;
+      logger.info(`Calling FastAPI at: ${aiUrl}`);
+      
+      let response;
+      try {
+        response = await axios.post(
+          aiUrl,
+          {
+            workspaceId: id,
+            sources: sourcesWithValidUrls,
+          },
+          {
+            timeout: 300000, // 5 minute timeout for processing
+            headers: {
+              'Authorization': token,
+              'Content-Type': 'application/json'
+            }
           }
+        );
+      } catch (aiErr: any) {
+        logger.error(`FASTAPI CALL FAILED: ${aiErr.message}`);
+        if (aiErr.code === 'ECONNREFUSED' || aiErr.code === 'ENOTFOUND') {
+          throw new Error(`Could not connect to AI service at ${config.fastapiUrl}. If your AI service is running locally, the cloud backend cannot reach it. Please provide a public URL for your AI service.`);
         }
-      );
+        throw aiErr;
+      }
+
 
       // Save generated content
       workspace.generatedContent = {
